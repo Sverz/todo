@@ -19,6 +19,16 @@
 */
 
 import Route from '@ioc:Adonis/Core/Route'
+import AutoSwagger from '@outloud/adonis-autoswagger'
+import swaggerConfig from 'Config/swagger'
+
+Route.get('/swagger', async () => {
+  return AutoSwagger.docs(Route.toJSON(), swaggerConfig)
+})
+
+Route.get('/docs', async () => {
+  return AutoSwagger.ui('/swagger')
+})
 
 Route.group(() => {
   Route.post('/register', 'AuthController.register')

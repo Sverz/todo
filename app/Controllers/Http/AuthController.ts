@@ -7,6 +7,15 @@ import Mail from '@ioc:Adonis/Addons/Mail'
 import Env from '@ioc:Adonis/Core/Env'
 
 export default class AuthController {
+
+    /**
+     * @register
+     * @summary Реєстрація нового користувача
+     * @description Реєструє нового користувача за email та паролем
+     * @requestBody {"email": "user@example.com", "password": "string123"}
+     * @responseBody 201 - {"message": "User registered", "user": {"id": 1, "email": "user@example.com"}}
+     * @responseBody 422 - {"errors": ["Validation error"]}
+     */
     public async register({ request, auth, response }: HttpContextContract) {
         const userSchema = schema.create({
             email: schema.string([rules.email(), rules.unique({ table: 'users', column: 'email' })]),
@@ -19,6 +28,14 @@ export default class AuthController {
         return response.created({ message: 'User registered', user })
     }
 
+    /**
+     * @login
+     * @summary Логін користувача
+     * @description Аутентифікація за email та паролем
+     * @requestBody {"email": "user@example.com", "password": "string123"}
+     * @responseBody 200 - {"message": "Login successful"}
+     * @responseBody 401 - {"message": "Invalid credentials"}
+     */
     public async login({ request, auth, response }: HttpContextContract) {
         const loginSchema = schema.create({
             email: schema.string([rules.email()]),
@@ -30,11 +47,25 @@ export default class AuthController {
         return response.ok({ message: 'Login successful' })
     }
 
+    /**
+     * @logout
+     * @summary Вихід користувача
+     * @description Вихід з поточної сесії
+     * @responseBody 200 - {"message": "Logout successful"}
+     */
     public async logout({ auth, response }: HttpContextContract) {
         await auth.use('web').logout()
         return response.ok({ message: 'Logout successful' })
     }
 
+    /**
+     * @forgotPassword
+     * @summary Запит на скидання пароля
+     * @description Надсилає email з токеном для скидання пароля
+     * @requestBody {"email": "user@example.com"}
+     * @responseBody 200 - {"message": "Інструкція надіслана на email"}
+     * @responseBody 400 - {"message": "Користувача не знайдено"}
+     */
     public async forgotPassword({ request, response }: HttpContextContract) {
         const email = request.input('email')
         if (!email) return response.badRequest('Email is empty')
@@ -64,6 +95,14 @@ export default class AuthController {
         return { message: 'Інструкція надіслана на email' }
     }
 
+    /**
+     * @resetPassword
+     * @summary Скидання пароля
+     * @description Оновлює пароль користувача за токеном
+     * @requestBody {"token": "uuid-token", "password": "newPassword123"}
+     * @responseBody 200 - {"message": "Пароль змінено"}
+     * @responseBody 400 - {"message": "Невалідний або прострочений токен"}
+     */
     public async resetPassword({ request, response }: HttpContextContract) {
         const token = request.input('token')
         const password = request.input('password')
@@ -81,4 +120,5 @@ export default class AuthController {
 
         return { message: 'Пароль змінено' }
     }
+
 }
