@@ -5,6 +5,10 @@ import { DateTime } from 'luxon'
 import { v4 as uuidv4 } from 'uuid'
 import Mail from '@ioc:Adonis/Addons/Mail'
 import Env from '@ioc:Adonis/Core/Env'
+import { createReadStream } from 'fs'
+import { parser } from 'stream-json'
+import { streamArray } from 'stream-json/streamers/StreamArray'
+import { chain } from 'stream-chain'
 
 export default class AuthController {
 
@@ -119,6 +123,40 @@ export default class AuthController {
         await user.save()
 
         return { message: 'Пароль змінено' }
+    }
+
+    /**
+     * @importUsers
+     * @summary Імпортує користувачів із JSON-файлу у базу
+     * @description Зчитує файл generated_users.json та зберігає в базу User
+     * @responseBody 200 - {"message": "Імпорт завершено", "count": 100000}
+     */
+    public async importUsers({ response }: HttpContextContract) {
+        const pipeline = chain([
+            createReadStream('data.json'),
+            parser(),
+            streamArray()
+        ])
+
+        let imported = 0
+
+        for await (const { value } of pipeline) {
+            const user = new User()
+            user.id = value.id
+            user.email = value.email
+            user.password = value.password
+            user.resetToken = value.resetToken
+            user.resetTokenExpiresAt = value.resetTokenExpiresAt
+                ? DateTime.fromISO(value.resetTokenExpiresAt)
+                : null
+            user.createdAt = DateTime.fromISO(value.createdAt)
+            user.updatedAt = DateTime.fromISO(value.updatedAt)
+            console.log(user)
+            await user.save()
+            imported++
+        }
+
+        return response.ok({ message: 'Імпорт завершено', count: imported })
     }
 
 }

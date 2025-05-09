@@ -4,16 +4,20 @@ services:
     build: .
     ports:
       - "3333:3333"
-    volumes:
-      - .:/app
-    env_file:
-      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3333
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+    restart: unless-stopped
     depends_on:
       - db
 
   db:
-    image: postgres
-    restart: always
+    image: postgres:alpine
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -22,6 +26,10 @@ services:
       POSTGRES_DB: todo
     volumes:
       - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 200M
 
 volumes:
   pgdata:

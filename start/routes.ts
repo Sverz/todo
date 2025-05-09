@@ -36,6 +36,7 @@ Route.group(() => {
   Route.post('/logout', 'AuthController.logout')
   Route.post('/forgot-password', 'AuthController.forgotPassword')
   Route.post('/reset-password', 'AuthController.resetPassword')
+  Route.post('/import-users', 'AuthController.importUsers')
 }).prefix('/api/auth')
 
 Route.group(() => {
